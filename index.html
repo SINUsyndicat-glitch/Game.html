@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>body { margin: 0; overflow: hidden; } canvas { display: block; }</style>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from 'https://cdn.skypack.dev/three@0.136.0';
+        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/GLTFLoader.js';
+
+        // 1. إعداد المشهد الأساسي
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // إضافة إضاءة (ضروري جداً لرؤية المجسم)
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(1, 1, 1);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x404040));
+
+        // 2. تحميل ملف الـ GLB
+        let mixer;
+        const loader = new GLTFLoader();
+        
+        // ضع اسم ملفك هنا بدلاً من 'model.glb'
+        loader.load('a.glb', (gltf) => {
+            const model = gltf.scene;
+            scene.add(model);
+
+            // تشغيل الحركات المدمجة في الـ GLB
+            mixer = new THREE.AnimationMixer(model);
+            gltf.animations.forEach((clip) => {
+                mixer.clipAction(clip).play();
+            });
+        });
+
+        camera.position.z = 5;
+
+        // 3. حلقة التحريك (Loop)
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            if (mixer) mixer.update(clock.getDelta());
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
